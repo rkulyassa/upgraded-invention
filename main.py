@@ -1,6 +1,6 @@
 from typing import Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 app = FastAPI()
 
@@ -10,6 +10,11 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.middleware("http")
+async def middleware(request: Request, call_next):
+    user_id = request.query_params.get("user_id")
+    if not user_id:
+        user_id = request.client.host
+
+    response = await call_next(request)
+    return response
